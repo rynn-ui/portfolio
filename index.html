@@ -557,6 +557,67 @@
       .project-info-mini { display: none; }
       .modal-content-area { padding: 25px; }
     }
+
+    @media (max-width: 600px) {
+      /* Navbar */
+      #navbar { width: calc(100% - 20px); padding: 0 15px; height: 36px; }
+      .nav-left, .nav-center, .nav-right { font-size: 0.55rem; letter-spacing: 0.1em; }
+      
+      /* Bottom Navbar */
+      #bottom-navbar { width: calc(100% - 20px); gap: 1rem; padding: 0 15px; }
+      .nav-link { font-size: 0.5rem; letter-spacing: 0.1em; }
+
+      /* Section Nav */
+      #section-nav { right: 8px; gap: 10px; transform: translateY(-50%) scale(0.85); }
+      .snav-dot::before { right: 14px; font-size: 0.5rem; }
+
+      /* Modal Structure */
+      .modal-window { width: 95vw; height: 92vh; transform: translateY(20px) scale(0.95); }
+      #works-modal.open .modal-window { transform: translateY(0) scale(1); }
+      .modal-header { padding: 10px 15px; }
+      .header-title { font-size: 0.55rem; letter-spacing: 0.2em; }
+      .modal-body { flex-direction: column; }
+      
+      /* Modal Sidebar */
+      .modal-sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid rgba(0,0,0,0.06); padding: 10px; flex-direction: column; }
+      .sidebar-tabs { padding: 0 0 10px 0; border-bottom: none; gap: 8px; }
+      .tab-btn { font-size: 0.55rem; padding: 5px; }
+      .sidebar-list { flex-direction: row; overflow-x: auto; overflow-y: hidden; padding: 5px 0; gap: 8px; align-items: center; }
+      .sidebar-list::-webkit-scrollbar { display: none; }
+      .sidebar-list { -ms-overflow-style: none; scrollbar-width: none; }
+      .project-item { padding: 6px; }
+      .project-thumb-mini { width: 50px; height: 38px; }
+      
+      /* Modal Content Area */
+      .modal-content-area { padding: 15px; }
+      .project-main-title { font-size: 1.4rem; margin-bottom: 12px; }
+      .project-main-desc { font-size: 0.8rem; margin-bottom: 20px; }
+      .tech-stack { margin-bottom: 20px; }
+      .project-main-image { margin-bottom: 20px; }
+      .details-grid { grid-template-columns: 1fr; gap: 12px; padding-top: 15px; margin-bottom: 25px; }
+      .action-links { flex-direction: column; gap: 10px; }
+      .btn-main { padding: 12px; font-size: 0.7rem; }
+      
+      /* Typo & Elements */
+      .unlock-text { font-size: 0.6rem; letter-spacing: 0.15em; text-align: center; }
+      .unlock-sub { font-size: 0.5rem; }
+      .unlock-circle { width: 70px; height: 70px; margin-bottom: 1rem; }
+      .unlock-icon { font-size: 1.5rem; }
+      
+      #sound-btn { bottom: 1.5rem; right: 1.5rem; width: 36px; height: 36px; font-size: 0.85rem; }
+      #sfx-label { bottom: 4.5rem; right: 1.5rem; }
+      
+      .loader-letter { font-size: 1.2rem; }
+      .loader-bar-wrap { width: 85vw; }
+      
+      #scroll-hint { bottom: 1.5rem; }
+    }
+
+    /* Hide custom cursor on touch devices */
+    @media (hover: none) and (pointer: coarse) {
+      #cursor-dot, #cursor-ring, .cursor-trail { display: none !important; }
+      body, a, button, .snav-dot, .close-btn, .tab-btn { cursor: auto !important; }
+    }
   </style>
 </head>
 <body>
@@ -1266,7 +1327,14 @@ updateMagnetic();
 
     const iw = img.naturalWidth;
     const ih = img.naturalHeight;
-    const scale = Math.max(canvasWidth / iw, canvasHeight / ih);
+    
+    // On mobile screens, fit the width to prevent cropping left/right text in the 16:9 frames.
+    // On desktop, cover the screen.
+    const isMobile = canvasWidth < 768;
+    const scale = isMobile 
+      ? canvasWidth / iw 
+      : Math.max(canvasWidth / iw, canvasHeight / ih);
+      
     const dw = iw * scale, dh = ih * scale;
     const dx = (canvasWidth - dw) / 2, dy = (canvasHeight - dh) / 2;
 
