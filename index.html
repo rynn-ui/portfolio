@@ -1322,7 +1322,16 @@ updateMagnetic();
   }
 
   function drawFrame(idx) {
-    const img = images[idx];
+    let img = images[idx];
+
+    // Nearest-frame fallback
+    if (!img) {
+      for (let i = 1; i < 30; i++) {
+        if (idx + i < TOTAL && images[idx + i]) { img = images[idx + i]; break; }
+        if (idx - i >= 0 && images[idx - i]) { img = images[idx - i]; break; }
+      }
+    }
+    
     if (!img) return;
 
     const iw = img.naturalWidth;
@@ -1342,26 +1351,60 @@ updateMagnetic();
   }
 
   function preload() {
-    // Priority loading: load first 20 frames immediately, then the rest
-    const loadImg = (i) => {
-      const img = new Image();
-      img.onload = () => {
-        images[i] = img; loaded++;
-        const pct = Math.round((loaded / TOTAL) * 100);
-        fill.style.width  = pct + '%';
-        count.textContent = `${loaded} / ${TOTAL}`;
-        pctEl.textContent = pct + '%';
-        if (loaded === TOTAL) onReady();
-      };
-      img.onerror = () => {
-        loaded++;
-        console.warn(`❌ Failed to load frame ${i}`);
-        if (loaded === TOTAL) onReady();
-      };
-      img.src = framePaths[i];
+    const criticalFrames = new Set();
+    // 1. Initial burst
+    for (let i = 0; i < 40; i++) criticalFrames.add(i);
+    // 2. Section markers
+    SECTIONS.forEach(s => criticalFrames.add(s.frame));
+    // 3. Keyframes (every 10th) for low-fps scaffold
+    for (let i = 0; i < TOTAL; i += 10) criticalFrames.add(i);
+
+    const phase1Arr = Array.from(criticalFrames);
+    const phase2Arr = [];
+    for (let i = 0; i < TOTAL; i++) {
+      if (!criticalFrames.has(i)) phase2Arr.push(i);
+    }
+
+    let phase1Loaded = 0;
+    const totalPhase1 = phase1Arr.length;
+
+    const loadImg = (i, isPhase1) => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          images[i] = img;
+          if (isPhase1) {
+            phase1Loaded++;
+            const pct = Math.round((phase1Loaded / totalPhase1) * 100);
+            fill.style.width  = pct + '%';
+            count.textContent = `${phase1Loaded} / ${totalPhase1} (Phase 1)`;
+            pctEl.textContent = `Optimizing: ${pct}%`;
+            if (phase1Loaded === totalPhase1) onReady();
+          }
+          resolve();
+        };
+        img.onerror = () => {
+          if (isPhase1) {
+            phase1Loaded++;
+            if (phase1Loaded === totalPhase1) onReady();
+          }
+          resolve();
+        };
+        img.src = framePaths[i];
+      });
     };
 
-    framePaths.forEach((_, i) => loadImg(i));
+    // Phase 1: Load all critical frames in parallel
+    Promise.all(phase1Arr.map(i => loadImg(i, true))).then(() => {
+      // Phase 2: Background throttled loading
+      let index = 0;
+      const CONCURRENCY = 6;
+      const next = () => {
+        if (index >= phase2Arr.length) return;
+        loadImg(phase2Arr[index++], false).then(next);
+      };
+      for (let i = 0; i < CONCURRENCY; i++) next();
+    });
   }
 
   function onReady() {
