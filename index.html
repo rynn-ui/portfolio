@@ -1378,7 +1378,7 @@ updateMagnetic();
             const pct = Math.round((phase1Loaded / totalPhase1) * 100);
             fill.style.width  = pct + '%';
             count.textContent = `${phase1Loaded} / ${totalPhase1} `;
-            pctEl.textContent = `Optimizing for you low end Device 💀: ${pct}%`;
+            pctEl.textContent = `Optimizing for your low end Device 💀: ${pct}%`;
             if (phase1Loaded === totalPhase1) onReady();
           }
           resolve();
